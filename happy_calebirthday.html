@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>夏以昼生日倒计时</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Caveat, sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        .background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            transition: background-image 1.5s ease-in-out;
+            z-index: -2;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: -1;
+        }
+
+        /* 倒计时盒子固定在右下角 */
+        .countdown-box {
+            position: fixed;
+            right: 30px;
+            bottom: 30px;
+            background: rgba(0, 0, 0, 0); /* 变透：从 0.5 → 0.25 */
+            padding: 30px 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(2px);    /* 模糊稍微加强，更柔 */
+            min-width: 450px
+        }
+
+        /* 标题渐变 */
+        .title {
+            font-size: 32px;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            background: linear-gradient(90deg, #DAA000 0%, #000DAA 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .time-box {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .time-item {
+            min-width: 80px;
+        }
+
+        /* 倒计时数字渐变 */
+        .time-number {
+            font-size: 46px;
+            font-weight: bold;
+            background: linear-gradient(90deg, #DAA000 0%, #000DAA 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* 时间文字（天时分秒） */
+       .time-text {
+            font-size: 16px;
+            margin-top: 5px;
+            background: linear-gradient(90deg, #DAA000 0%, #000DAA 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        /* 祝福语渐变 */
+        .birthday-text {
+            font-size: 30px;
+            font-weight: bold;
+            display: none;
+            line-height: 1.8;
+            background: linear-gradient(90deg, #FF9F4A 0%, #4A90E2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            white-space: pre-line;
+        }
+        /* 流动动画 */
+        @keyframes flowGradient {
+            0% { background-position: 20% 50%; }
+            50% { background-position: 80% 50%; }
+            100% { background-position: 20% 50%; }
+        }
+        /* 呼吸柔光 */
+        @keyframes softGlow {
+            0%   { opacity: 0.92; }
+            50%  { opacity: 1; }
+            100% { opacity: 0.92; }
+        }
+        /* 文字 */
+        .title, .time-number, .time-text {
+            background-size: 200% 200%;
+            animation: flowGradient 6s ease infinite, softGlow 4s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+    <div class="background" id="bg"></div>
+    <div class="overlay"></div>
+
+    <div class="countdown-box">
+        <h1 class="title" id="title">夏以昼生日倒计时</h1>
+        <div class="time-box" id="timeBox">
+            <div class="time-item">
+                <div class="time-number" id="day">00</div>
+                <div class="time-text">天</div>
+            </div>
+            <div class="time-item">
+                <div class="time-number" id="hour">00</div>
+                <div class="time-text">时</div>
+            </div>
+            <div class="time-item">
+                <div class="time-number" id="min">00</div>
+                <div class="time-text">分</div>
+            </div>
+            <div class="time-item">
+                <div class="time-number" id="sec">00</div>
+                <div class="time-text">秒</div>
+            </div>
+        </div>
+        <div class="birthday-text" id="happyBirthday"></div>
+    </div>
+
+    <script>
+        const BIRTHDAY = new Date("2026-06-13 00:00:00");
+        const BIRTHDAY_IMAGE = "img/birthday-bg.jpg";
+        const MAX_IMG_NUM = 36;
+
+        const bgElement = document.getElementById("bg");
+        const titleEl = document.getElementById("title");
+        const timeBox = document.getElementById("timeBox");
+        const happyBirthdayEl = document.getElementById("happyBirthday");
+        let currentIndex = 1;
+
+        // 祝福语内容
+        const birthdayMsg = `祝夏以昼生日快乐!\nHappy Calebirthday`;
+
+        function isBirthdayArrived() {
+            const now = new Date();
+            return now >= BIRTHDAY;
+        }
+
+        function changeBackground() {
+            if (isBirthdayArrived()) {
+                bgElement.style.backgroundImage = `url(${BIRTHDAY_IMAGE})`;
+                titleEl.style.display = "none";
+                timeBox.style.display = "none";
+                happyBirthdayEl.innerText = birthdayMsg;
+                happyBirthdayEl.style.display = "block";
+                return;
+            }
+
+            let imgUrl = `img/bg${currentIndex}.jpg`;
+            bgElement.style.backgroundImage = `url(${imgUrl})`;
+            currentIndex++;
+            if (currentIndex > MAX_IMG_NUM) currentIndex = 1;
+        }
+
+        function countdown() {
+            const now = new Date();
+            let diff = BIRTHDAY - now;
+
+            if (diff <= 0) {
+                document.getElementById("day").innerText = "00";
+                document.getElementById("hour").innerText = "00";
+                document.getElementById("min").innerText = "00";
+                document.getElementById("sec").innerText = "00";
+                changeBackground();
+                return;
+            }
+
+            const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hour = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const min = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const sec = Math.floor((diff % (1000 * 60)) / 1000);
+
+            document.getElementById("day").innerText = day.toString().padStart(2, "0");
+            document.getElementById("hour").innerText = hour.toString().padStart(2, "0");
+            document.getElementById("min").innerText = min.toString().padStart(2, "0");
+            document.getElementById("sec").innerText = sec.toString().padStart(2, "0");
+        }
+
+        countdown();
+        changeBackground();
+        setInterval(countdown, 1000);
+        setInterval(changeBackground, 5000);
+    </script>
+</body>
+</html>
